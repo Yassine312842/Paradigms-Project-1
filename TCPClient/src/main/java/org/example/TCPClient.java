@@ -1,10 +1,16 @@
-package client;
+package org.example;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
+/**
+ * Console-mode TCP client.
+ * Usage: java TCPClient <ServerIP> <Port>
+ *
+ * The JavaFX GUI client is ChatApp; this class is for command-line usage.
+ */
 public class TCPClient {
 
     public static void main(String[] args) {

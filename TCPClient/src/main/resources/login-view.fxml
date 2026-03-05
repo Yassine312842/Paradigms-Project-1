@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.effect.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+
+<StackPane xmlns:fx="http://javafx.com/fxml"
+           fx:controller="org.example.LoginController"
+           fx:id="rootPane">
+
+    <!-- Dark fallback behind everything -->
+    <Region style="-fx-background-color: #0b1f16;"/>
+
+    <!-- Background image -->
+    <ImageView fx:id="bgImage" preserveRatio="false"/>
+
+    <!-- Gradient overlay -->
+    <Region fx:id="overlay" style="-fx-background-color: linear-gradient(to bottom right, rgba(11,84,49,0.72), rgba(0,0,0,0.55));"/>
+
+    <!-- Floating login card -->
+    <VBox fx:id="card" alignment="CENTER" spacing="14" maxWidth="540"
+          style="-fx-background-color: rgba(255,255,255,0.72); -fx-background-radius: 18; -fx-border-radius: 18; -fx-border-color: rgba(255,255,255,0.35); -fx-border-width: 1;">
+        <padding><Insets top="26" right="30" bottom="22" left="30"/></padding>
+        <effect><DropShadow radius="28" color="rgba(0,0,0,0.28)"/></effect>
+
+        <!-- Logo -->
+        <ImageView fx:id="logoImage" fitHeight="150" preserveRatio="true"/>
+
+        <!-- Title -->
+        <Label text="AUI General Chat"
+               style="-fx-font-size: 26px; -fx-font-weight: 900; -fx-text-fill: #0B5431;"/>
+
+        <!-- Subtitle -->
+        <Label text="Sign in to join the conversation."
+               style="-fx-font-size: 13px; -fx-font-weight: 700; -fx-text-fill: rgba(0,0,0,0.55);"/>
+
+        <Separator/>
+
+        <!-- Form -->
+        <VBox spacing="10" alignment="CENTER_LEFT" fillWidth="true">
+            <Label text="Server IP" styleClass="label-small"/>
+            <TextField fx:id="ipField" text="localhost" styleClass="login-field"/>
+
+            <Label text="Port" styleClass="label-small"/>
+            <TextField fx:id="portField" text="3000" styleClass="login-field"/>
+
+            <Label text="Username" styleClass="label-small"/>
+            <TextField fx:id="userField" promptText="Leave empty for READ-ONLY" styleClass="login-field"
+                       onAction="#handleConnect"/>
+        </VBox>
+
+        <!-- Error label -->
+        <Label fx:id="errorLabel" visible="false" managed="false"
+               style="-fx-text-fill: #ff3b30; -fx-font-size: 12px; -fx-font-weight: 800;"/>
+
+        <!-- Connect button + tip -->
+        <VBox spacing="10" alignment="CENTER" fillWidth="true">
+            <Button fx:id="connectBtn" text="Connect" maxWidth="Infinity"
+                    onAction="#handleConnect"
+                    style="-fx-background-color: #0B5431; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: 900; -fx-padding: 12 16 12 16; -fx-background-radius: 12; -fx-cursor: hand;"/>
+            <Label text="Leave username empty to join as read-only."
+                   style="-fx-text-fill: rgba(0,0,0,0.55); -fx-font-size: 12px; -fx-font-weight: 700;"/>
+        </VBox>
+
+    </VBox>
+
+</StackPane>

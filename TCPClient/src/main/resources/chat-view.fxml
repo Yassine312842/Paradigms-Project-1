@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="org.example.ChatController"
+            styleClass="chat-root">
+
+    <!-- ===== TOP BAR ===== -->
+    <top>
+        <HBox fx:id="topbar"
+              styleClass="topbar"
+              spacing="12"
+              alignment="CENTER_LEFT">
+
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
+
+            <ImageView fx:id="topLogo"
+                       fitHeight="50"
+                       preserveRatio="true"/>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <HBox spacing="6" alignment="CENTER">
+                <Circle fx:id="statusCircle"
+                        radius="7"
+                        fill="GRAY"/>
+
+                <Label fx:id="statusLabel"
+                       text="Offline"
+                       styleClass="status-label"/>
+            </HBox>
+
+        </HBox>
+    </top>
+
+
+    <!-- ===== CHAT CENTER ===== -->
+    <center>
+        <StackPane styleClass="chat-center">
+
+            <ImageView fx:id="chatBgImage"
+                       opacity="0.06"
+                       preserveRatio="false"
+                       StackPane.alignment="CENTER"/>
+
+            <ListView fx:id="chatList"
+                      styleClass="chat-list"
+                      focusTraversable="false"
+                      StackPane.alignment="CENTER"
+                      VBox.vgrow="ALWAYS"/>
+
+        </StackPane>
+    </center>
+
+
+    <!-- ===== USERS SIDEBAR ===== -->
+    <right>
+        <VBox spacing="12"
+              prefWidth="220"
+              styleClass="users-panel">
+
+            <padding>
+                <Insets top="12" right="12" bottom="12" left="12"/>
+            </padding>
+
+            <Label text="Connected Users"
+                   styleClass="users-title"/>
+
+            <ListView fx:id="usersList"
+                      VBox.vgrow="ALWAYS"/>
+
+            <Button fx:id="refreshUsersBtn"
+                    text="Refresh"
+                    styleClass="secondary-btn"
+                    onAction="#handleRefreshUsers"/>
+
+        </VBox>
+    </right>
+
+
+    <!-- ===== INPUT BAR ===== -->
+    <bottom>
+        <HBox spacing="10"
+              alignment="CENTER"
+              styleClass="input-bar">
+
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
+
+            <TextField fx:id="messageField"
+                       promptText="Type a message..."
+                       onAction="#handleSend"
+                       HBox.hgrow="ALWAYS"/>
+
+            <Button fx:id="sendBtn"
+                    text="Send"
+                    styleClass="primary-btn"
+                    onAction="#handleSend"/>
+
+            <Button fx:id="disconnectBtn"
+                    text="Disconnect"
+                    styleClass="danger-btn"
+                    onAction="#handleDisconnect"/>
+
+        </HBox>
+    </bottom>
+
+</BorderPane>

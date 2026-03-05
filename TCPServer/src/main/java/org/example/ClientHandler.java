@@ -1,4 +1,4 @@
-package server;
+package org.example;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -18,79 +18,148 @@ public class ClientHandler extends Thread {
     private String username;
     private boolean readOnly;
 
-    private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm");
+    private static final DateTimeFormatter TIME_FMT =
+            DateTimeFormatter.ofPattern("HH:mm");
 
     public ClientHandler(Socket socket, ServerModel server) {
         this.socket = socket;
         this.server = server;
         setName("client-handler-" + socket.getPort());
+        setDaemon(true);
     }
 
     @Override
     public void run() {
-        try {
-            in  = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            out = new PrintWriter(socket.getOutputStream(), true);
 
-            // 1) First line = username (handshake)
+        try {
+
+            in = new BufferedReader(
+                    new InputStreamReader(socket.getInputStream()));
+
+            out = new PrintWriter(
+                    socket.getOutputStream(), true);
+
+            // ---- Username handshake ----
             String firstLine = in.readLine();
-            if (firstLine == null) {
-                return; // disconnected immediately
-            }
+
+            if (firstLine == null)
+                return;
 
             username = firstLine.trim();
 
-            // 2) Read-only mode if empty username
             if (username.isEmpty()) {
+
                 readOnly = true;
                 username = "READ_ONLY_" + socket.getPort();
-                sendMessage(systemMsg("You are connected in READ-ONLY MODE (cannot send messages)."));
+
+                sendMessage(systemMsg(
+                        "You are connected in READ-ONLY MODE (cannot send messages)."));
+
             } else {
+
                 readOnly = false;
-                sendMessage(systemMsg("Welcome " + username + "!"));
+
+                sendMessage(systemMsg(
+                        "Welcome " + username + "!"));
             }
 
-            // SYSTEM join message (broadcast to others)
-            server.log(username + " connected.");
-            server.broadcast(systemMsg(username + " joined the chat."), this);
+            server.log("Welcome " + username);
 
-            // 3) Message loop
+            server.notifyClientJoined(username);
+
+            server.broadcast(
+                    systemMsg(username + " joined the chat."), this);
+
+            // ---- Message loop ----
             String msg;
-            while ((msg = in.readLine()) != null) {
-                msg = msg.trim();
-                if (msg.isEmpty()) continue;
 
-                // Disconnect commands
-                if (msg.equalsIgnoreCase("bye") || msg.equalsIgnoreCase("end")) {
+            while ((msg = in.readLine()) != null) {
+
+                msg = msg.trim();
+
+                if (msg.isEmpty())
+                    continue;
+
+                // ---- Disconnect commands ----
+                if (msg.equalsIgnoreCase("bye")
+                        || msg.equalsIgnoreCase("end")) {
+
                     sendMessage(systemMsg("Goodbye!"));
                     break;
                 }
 
-                // allUsers command (reply only to this client)
+                // ---- Active users command ----
                 if (msg.equalsIgnoreCase("allUsers")) {
-                    sendMessage(systemMsg("Active users: " + server.getActiveUsers()));
+
+                    sendMessage(systemMsg(
+                            "Active users: " + server.getActiveUsers()));
+
                     continue;
                 }
 
-                // Read-only enforcement
+                // ---- Private message command ----
+                if (msg.startsWith("/msg ")) {
+
+                    String[] parts = msg.split(" ", 3);
+
+                    if (parts.length >= 3) {
+
+                        String targetUser = parts[1];
+                        String privateMsg = parts[2];
+
+                        boolean found = false;
+
+                        for (ClientHandler c : server.getClients()) {
+
+                            if (targetUser.equalsIgnoreCase(c.getUsername())) {
+
+                                c.sendMessage(
+                                        "(Private) " + username + ": " + privateMsg);
+
+                                sendMessage(
+                                        "(Private to " + targetUser + "): " + privateMsg);
+
+                                found = true;
+                                break;
+                            }
+                        }
+
+                        if (!found) {
+                            sendMessage(systemMsg(
+                                    "User not found: " + targetUser));
+                        }
+                    }
+
+                    continue;
+                }
+
+                // ---- Read-only enforcement ----
                 if (readOnly) {
-                    sendMessage(systemMsg("READ-ONLY MODE: you cannot send messages."));
+
+                    sendMessage(systemMsg(
+                            "READ-ONLY MODE: you cannot send messages."));
+
                     continue;
                 }
 
-                // Normal message -> broadcast formatted
-                String formatted = "[" + now() + "] " + username + ": " + msg;
+                // ---- Normal message broadcast ----
+                String formatted =
+                        "[" + now() + "] " + username + ": " + msg;
+
                 server.broadcast(formatted, this);
             }
 
         } catch (Exception ignored) {
-            // unexpected disconnect
+
         } finally {
-            // cleanup
+
             server.removeClient(this);
 
             if (username != null) {
-                server.broadcast(systemMsg(username + " left the chat."), this);
+
+                server.broadcast(
+                        systemMsg(username + " left the chat."), this);
+
                 server.log(username + " disconnected.");
             }
 
@@ -107,7 +176,9 @@ public class ClientHandler extends Thread {
     }
 
     public void sendMessage(String message) {
-        if (out != null) out.println(message);
+
+        if (out != null)
+            out.println(message);
     }
 
     public String getUsername() {
@@ -115,8 +186,20 @@ public class ClientHandler extends Thread {
     }
 
     private void closeQuietly() {
-        try { if (in != null) in.close(); } catch (Exception ignored) {}
-        try { if (out != null) out.close(); } catch (Exception ignored) {}
-        try { if (socket != null && !socket.isClosed()) socket.close(); } catch (Exception ignored) {}
+
+        try {
+            if (in != null)
+                in.close();
+        } catch (Exception ignored) {}
+
+        try {
+            if (out != null)
+                out.close();
+        } catch (Exception ignored) {}
+
+        try {
+            if (socket != null && !socket.isClosed())
+                socket.close();
+        } catch (Exception ignored) {}
     }
 }

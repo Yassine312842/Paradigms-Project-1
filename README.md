@@ -1,178 +1,160 @@
 # AUI General Chat (Paradigms Project 1)
 
-AUI General Chat is a **TCP multi-client chat application** built in **Java**, with a modern **JavaFX** client UI and a TCP server that broadcasts messages to connected clients. The UI follows AUI branding (green + white) and supports **read-only mode** when the username is left empty.
+AUI General Chat is a **TCP multi-client chat application** built in **Java**, with a modern **JavaFX** GUI for both the client and server, WhatsApp-like chat bubbles, and support for **read-only mode**.
 
 ---
 
 ## Features
 
 ### Client (JavaFX)
-- Modern **login screen**
-  - Full-screen background image
-  - Centered floating “glass” login card
-  - AUI branding colors: **#0B5431 + white**
-- Modern **chat screen**
-  - Top green bar with **logo-only** (falls back to title if logo not found)
-  - WhatsApp-like **message bubbles** (own / other / system)
-  - Subtle **background image** inside the chat area (low opacity)
-  - Users sidebar + refresh button
-- **Read-only mode**
-  - Leave username empty → connects in read-only (cannot send messages)
+- Modern **login screen** with full-screen background, floating glass card, AUI branding (#0B5431 + white)
+- Modern **chat screen** with WhatsApp-like **message bubbles** (own / other / system)
+- **Green circle** online status indicator (turns grey on disconnect)
+- Users sidebar with refresh button
+- **Read-only mode** — leave username empty → can observe but cannot send messages
+- Disconnect button sends `bye` and returns to login
 
-### Server
-- Accepts multiple clients
-- Broadcasts messages to all connected clients
-- Supports commands:
-  - `allUsers` → returns the list of active users
-  - `bye` / `end` → disconnects the client
+### Server (JavaFX Dashboard)
+- **Live log area** displaying events: "Server Started", "Waiting for Client", "Welcome [username]", "Client disconnected"
+- **Connected clients ListView** with **random color dots** per username
+- **Online status indicator** with server address display
+- Accepts multiple simultaneous client connections (thread-per-client model)
+- Supports commands: `allUsers`, `bye` / `end`
 
 ---
 
 ## Project Structure
 
-
+```
 Paradigms-Project-1/
-├─ TCPServer/
-│ └─ src/main/...
-├─ TCPClient/
-│ ├─ src/main/java/org/example/...
-│ └─ src/main/resources/
-│ ├─ styles.css
-│ └─ images/
-│ ├─ login_bg.jpg.jpg
-│ ├─ aui_logo.png.png
-│ └─ (optional) aui_logo_white.png
-└─ PROTOCOL.md
-
+├── TCPServer/
+│   ├── pom.xml
+│   └── src/main/
+│       ├── java/org/example/
+│       │   ├── TCPServer.java          # Launcher (GUI or --headless)
+│       │   ├── ServerApp.java          # JavaFX server dashboard
+│       │   ├── ServerModel.java        # Networking & business logic
+│       │   └── ClientHandler.java      # Per-client thread handler
+│       └── resources/
+│           ├── server.properties       # host/port configuration
+│           ├── server-styles.css       # Server UI styles
+│           └── META-INF/MANIFEST.MF
+├── TCPClient/
+│   ├── pom.xml
+│   └── src/main/
+│       ├── java/org/example/
+│       │   ├── ChatApp.java            # JavaFX client UI (controller+view)
+│       │   ├── ClientModel.java        # Networking model
+│       │   └── TCPClient.java          # Console-mode client
+│       └── resources/
+│           ├── styles.css              # Client UI styles
+│           └── images/
+│               ├── login_bg.jpg.jpg
+│               ├── aui_logo.png.png
+│               └── aui_logo_white.png.png
+├── PROTOCOL.md
+├── TESTING.md
+└── README.md
+```
 
 ---
 
-## UI Assets (IMPORTANT)
+## Configuration
 
-Your client loads images from:
+Server IP and port are loaded from `TCPServer/src/main/resources/server.properties`:
 
-
-TCPClient/src/main/resources/images/
-
-
-### Login (required)
-- `login_bg.jpg.jpg`  → login background image
-- `aui_logo.png.png`  → login logo image
-
-### Chat Top Bar (optional, recommended)
-- `aui_logo_white.png` → white/transparent logo for the top bar
-
-If `aui_logo_white.png` is missing, the app tries other common names (including your current logo), and finally falls back to showing the title text.
-
-### Note about “removing the white background”
-JavaFX/CSS cannot remove a white rectangle baked into an image.  
-To remove the logo’s white box, use a **transparent PNG**.
+```properties
+server.host=localhost
+server.ip=127.0.0.1
+server.port=3000
+```
 
 ---
 
 ## How to Run
 
+### Prerequisites
+- **JDK 21+** installed
+- **Maven 3.8+** installed (or use IntelliJ's built-in Maven)
+
 ### 1) Run the Server
+
 From the **TCPServer** directory:
 
 ```bash
-mvn clean package
-mvn exec:java
-
-If you use IntelliJ:
-
-Open the TCPServer module
-
-Run the server main class
-
-Ensure it is listening on the same host/port the client uses (default: localhost:3000)
-
-2) Run the Client (JavaFX)
-
-From the TCPClient directory:
-
 mvn clean javafx:run
+```
 
-Then in the login page:
+The server dashboard will open showing "Server Started" and "Waiting for Client".
 
-Server IP: localhost (or the server machine IP)
+**Headless mode** (console only):
+```bash
+mvn exec:java -Dexec.args="--headless"
+```
 
-Port: 3000 (or whatever your server uses)
+### 2) Run the Client (JavaFX)
 
-Username:
+From the **TCPClient** directory:
 
-leave empty → read-only mode
-
-enter a username → normal mode
-
-Using the App
-Sending Messages
-
-Type a message and press Enter or click Send
-
-Your own message appears immediately in the UI (the server may not echo your own message back)
-
-Users List
-
-Click Refresh users
-
-The client sends the allUsers command and updates the sidebar list.
-
-Disconnecting
-
-Click Disconnect
-
-The client sends bye then disconnects.
-
-Commands
-
-These commands are handled by the server:
-
-allUsers → returns active users list
-
-bye or end → disconnects
-
-(See PROTOCOL.md for full protocol details.)
-
-Troubleshooting
-Images not showing (logo/background)
-
-Check all of these:
-
-Images exist inside:
-
-TCPClient/src/main/resources/images/
-
-Filenames match exactly:
-
-login_bg.jpg.jpg
-
-aui_logo.png.png
-
-(optional) aui_logo_white.png
-
-Rebuild and run again:
-
+```bash
 mvn clean javafx:run
-“Online” but cannot type/send
+```
 
-You are in read-only mode:
+In the login page:
+- **Server IP**: `localhost` (or the server machine IP)
+- **Port**: `3000`
+- **Username**: enter a name → normal mode; leave empty → read-only mode
 
-Username was empty at login
+### Using IntelliJ IDEA
 
-Enter a username and reconnect.
+1. Open `Paradigms-Project-1` as a project
+2. Import `TCPServer` and `TCPClient` as Maven modules
+3. Run `ServerApp.main()` for the server
+4. Run `ChatApp.main()` for the client
 
-JavaFX build issues
+---
 
-Make sure:
+## Commands
 
-You are using the correct JDK version configured for the project
+| Command | Description |
+|---------|-------------|
+| `allUsers` | Returns list of active users (click "Refresh users" in the UI) |
+| `bye` | Disconnects the client |
+| `end` | Disconnects the client |
 
-Maven is using the same JDK as your IDE
+---
 
-Notes
+## Architecture
 
-The client sends the username immediately after connecting.
+The project follows **Model-View-Controller** separation:
 
-If username is empty, the server considers the client read-only.
+| Layer | Client | Server |
+|-------|--------|--------|
+| **Model** | `ClientModel.java` — socket I/O | `ServerModel.java` — socket accept, broadcast |
+| **View** | `ChatApp.java` — JavaFX UI | `ServerApp.java` — JavaFX Dashboard |
+| **Controller** | `ChatApp.java` — event handlers | `ServerApp.java` — wires callbacks |
 
+**Concurrency**: Thread-per-client model — each `ClientHandler` runs on its own thread.
+
+---
+
+## Protocol
+
+See [PROTOCOL.md](PROTOCOL.md) for the full TCP message protocol.
+
+**Summary**:
+- Client sends username as the first line (handshake)
+- Empty username → read-only mode
+- Messages: `[HH:mm] username: message`
+- System messages: `[HH:mm] (SYSTEM): text`
+
+---
+
+## Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| Images not showing | Verify files exist in `TCPClient/src/main/resources/images/` with exact names |
+| "Online" but cannot type | You are in read-only mode — reconnect with a username |
+| JavaFX errors | Ensure JDK 21+ and `javafx-controls` dependency is resolved |
+| Build fails | Run `mvn clean compile` to check for errors; ensure correct JDK in IntelliJ |

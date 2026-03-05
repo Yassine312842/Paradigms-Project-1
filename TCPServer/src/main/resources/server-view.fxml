@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="org.example.ServerController"
+            styleClass="server-root">
+
+    <!-- ===== TOP BAR ===== -->
+    <top>
+        <HBox styleClass="server-topbar" spacing="12">
+            <Label text="TCP Chat Server" styleClass="server-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <HBox spacing="6" alignment="CENTER">
+                <Circle fx:id="statusCircle" radius="8" fill="#FFB300"/>
+                <Label fx:id="statusLabel" text="Starting..." styleClass="server-status"/>
+            </HBox>
+        </HBox>
+    </top>
+
+    <!-- ===== BODY ===== -->
+    <center>
+        <HBox spacing="14">
+            <padding><Insets topRightBottomLeft="14"/></padding>
+
+            <!-- Log Section -->
+            <VBox spacing="6" styleClass="section-box" HBox.hgrow="ALWAYS">
+                <Label text="Server Logs" styleClass="section-title"/>
+                <TextArea fx:id="logArea"
+                          editable="false"
+                          wrapText="true"
+                          styleClass="server-log"
+                          promptText="Server logs will appear here..."
+                          VBox.vgrow="ALWAYS"/>
+            </VBox>
+
+            <!-- Client List Section -->
+            <VBox spacing="6" styleClass="section-box" prefWidth="280">
+                <Label text="Connected Clients" styleClass="section-title"/>
+                <Label fx:id="clientCountLabel" text="0 connected" styleClass="client-count"/>
+                <ListView fx:id="clientListView"
+                          styleClass="client-list"
+                          VBox.vgrow="ALWAYS"/>
+            </VBox>
+
+        </HBox>
+    </center>
+
+</BorderPane>

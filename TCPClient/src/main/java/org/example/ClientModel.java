@@ -16,12 +16,18 @@ public class ClientModel {
     private Runnable onDisconnect = () -> {};
 
     public void connect(String ip, int port, String username) throws Exception {
+
         socket = new Socket(ip, port);
 
-        in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        out = new PrintWriter(socket.getOutputStream(), true);
+        in = new BufferedReader(
+                new InputStreamReader(socket.getInputStream())
+        );
 
-        // handshake: first line is username (empty => read-only)
+        out = new PrintWriter(
+                socket.getOutputStream(), true
+        );
+
+        // handshake: first message = username
         out.println(username == null ? "" : username);
     }
 
@@ -34,32 +40,62 @@ public class ClientModel {
     }
 
     public void startListening() {
-        Thread t = new Thread(() -> {
+
+        Thread listener = new Thread(() -> {
+
             try {
+
                 String msg;
+
                 while ((msg = in.readLine()) != null) {
+
                     onMessage.accept(msg);
                 }
+
             } catch (Exception ignored) {
-                // ignore
+
+                // connection lost
+
             } finally {
+
                 onDisconnect.run();
             }
+
         }, "client-listener");
 
-        t.setDaemon(true);
-        t.start();
+        listener.setDaemon(true);
+
+        listener.start();
     }
 
     public void sendMessage(String msg) {
-        if (out != null) out.println(msg);
+
+        if (out != null && !socket.isClosed()) {
+
+            out.println(msg);
+        }
     }
 
     public void disconnect() {
-        try { if (socket != null) socket.close(); } catch (Exception ignored) {}
+
+        try {
+
+            if (in != null)
+                in.close();
+
+            if (out != null)
+                out.close();
+
+            if (socket != null)
+                socket.close();
+
+        } catch (Exception ignored) {}
     }
 
     public boolean isConnected() {
-        return socket != null && socket.isConnected() && !socket.isClosed();
+
+        return socket != null
+                && socket.isConnected()
+                && !socket.isClosed();
     }
 }

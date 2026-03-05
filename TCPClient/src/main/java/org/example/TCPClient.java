@@ -28,6 +28,17 @@ public class TCPClient {
 
             System.out.println("Connected to server.");
 
+            // Ask for username
+            System.out.print("Enter username (leave empty for READ-ONLY mode): ");
+            String username = console.readLine();
+
+            if (username == null) {
+                username = "";
+            }
+
+            // Send username to server (handshake)
+            out.println(username);
+
             // Thread to receive messages
             new Thread(() -> {
                 try {

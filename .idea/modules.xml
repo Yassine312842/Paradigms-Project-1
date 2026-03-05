@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/ChatApp Project.iml" filepath="$PROJECT_DIR$/.idea/ChatApp Project.iml" />
+      <module fileurl="file://$PROJECT_DIR$/TCPClient/TCPClient.iml" filepath="$PROJECT_DIR$/TCPClient/TCPClient.iml" />
     </modules>
   </component>
 </project>

@@ -47,7 +47,7 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>org.example.ChatApp</mainClass>
+                    <mainClass>client.ChatApp</mainClass>
                 </configuration>
             </plugin>
 
@@ -59,7 +59,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>org.example.ChatApp</mainClass>
+                            <mainClass>client.ChatApp</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

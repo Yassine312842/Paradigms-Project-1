@@ -32,7 +32,7 @@ public class ClientHandler extends Thread {
             in  = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             out = new PrintWriter(socket.getOutputStream(), true);
 
-            // 1) First line = username (handshake)
+            // 1) First line = username
             String firstLine = in.readLine();
             if (firstLine == null) {
                 return; // disconnected immediately
@@ -50,7 +50,7 @@ public class ClientHandler extends Thread {
                 sendMessage(systemMsg("Welcome " + username + "!"));
             }
 
-            // SYSTEM join message (broadcast to others)
+            // broadcast to others
             server.log(username + " connected.");
             server.broadcast(systemMsg(username + " joined the chat."), this);
 
@@ -78,7 +78,6 @@ public class ClientHandler extends Thread {
                     continue;
                 }
 
-                // Normal message -> broadcast formatted
                 String formatted = "[" + now() + "] " + username + ": " + msg;
                 server.broadcast(formatted, this);
             }

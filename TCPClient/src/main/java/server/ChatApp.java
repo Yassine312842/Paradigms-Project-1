@@ -1,4 +1,4 @@
-package org.example;
+package server;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -23,18 +23,17 @@ import java.util.stream.Collectors;
 
 public class ChatApp extends Application {
 
-    // Your current resource filenames (from your folder screenshot)
+
     private static final String LOGIN_BG_PATH = "/images/login_bg.jpg.jpg";
     private static final String LOGIN_LOGO_PATH = "/images/aui_logo.png.png";
 
-    // We'll reuse the login background as a subtle chat background too
     private static final String CHAT_BG_PATH = "/images/login_bg.jpg.jpg";
 
     private static final String AUI_GREEN = "#0B5431";
 
     private final ClientModel model = new ClientModel();
 
-    // --- UI state ---
+
     private final ListView<Message> chatList = new ListView<>(FXCollections.observableArrayList());
     private final ListView<String> usersList = new ListView<>(FXCollections.observableArrayList());
 
@@ -67,7 +66,6 @@ public class ChatApp extends Application {
         stage.show();
     }
 
-    // ---------------- Floating card login over full background ----------------
     private Scene buildLoginScene(Stage stage) {
         TextField ipField = new TextField("localhost");
         TextField portField = new TextField("3000");
@@ -129,7 +127,7 @@ public class ChatApp extends Application {
         Image logoImg = tryLoadImage(LOGIN_LOGO_PATH);
         if (logoImg != null) {
             logo.setImage(logoImg);
-            logo.setFitHeight(150); // BIGGER LOGIN LOGO
+            logo.setFitHeight(150);
             logo.setPreserveRatio(true);
         }
 
@@ -231,7 +229,6 @@ public class ChatApp extends Application {
         return scene;
     }
 
-    // ---------------- Enhanced chat scene ----------------
     private Scene buildChatScene(Stage stage) {
         HBox topbar = new HBox(12);
         topbar.getStyleClass().add("topbar");
@@ -247,7 +244,7 @@ public class ChatApp extends Application {
         ImageView logoView = new ImageView();
         if (topLogoImg != null) {
             logoView.setImage(topLogoImg);
-            logoView.setFitHeight(56); // BIGGER TOPBAR LOGO
+            logoView.setFitHeight(56);
             logoView.setPreserveRatio(true);
         }
 

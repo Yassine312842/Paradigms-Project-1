@@ -10,6 +10,8 @@ import java.time.format.DateTimeFormatter;
 public class ClientHandler extends Thread {
 
     private final Socket socket;
+    private final ServerModel server;
+
     private BufferedReader in;
     private PrintWriter out;
 
@@ -18,20 +20,22 @@ public class ClientHandler extends Thread {
 
     private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm");
 
-    public ClientHandler(Socket socket) {
+    public ClientHandler(Socket socket, ServerModel server) {
         this.socket = socket;
+        this.server = server;
+        setName("client-handler-" + socket.getPort());
     }
 
     @Override
     public void run() {
         try {
-            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            in  = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             out = new PrintWriter(socket.getOutputStream(), true);
 
-            // 1) First line from client = username
+            // 1) First line = username (handshake)
             String firstLine = in.readLine();
             if (firstLine == null) {
-                return; // client disconnected immediately
+                return; // disconnected immediately
             }
 
             username = firstLine.trim();
@@ -46,9 +50,9 @@ public class ClientHandler extends Thread {
                 sendMessage(systemMsg("Welcome " + username + "!"));
             }
 
-            // ✅ SYSTEM join message (broadcast to others)
-            TCPServer.log(username + " connected.");
-            TCPServer.broadcast(systemMsg(username + " joined the chat."), this);
+            // SYSTEM join message (broadcast to others)
+            server.log(username + " connected.");
+            server.broadcast(systemMsg(username + " joined the chat."), this);
 
             // 3) Message loop
             String msg;
@@ -62,9 +66,9 @@ public class ClientHandler extends Thread {
                     break;
                 }
 
-                // allUsers command
+                // allUsers command (reply only to this client)
                 if (msg.equalsIgnoreCase("allUsers")) {
-                    sendMessage(systemMsg("Active users: " + TCPServer.getActiveUsers()));
+                    sendMessage(systemMsg("Active users: " + server.getActiveUsers()));
                     continue;
                 }
 
@@ -74,20 +78,22 @@ public class ClientHandler extends Thread {
                     continue;
                 }
 
-                // Normal message broadcast
+                // Normal message -> broadcast formatted
                 String formatted = "[" + now() + "] " + username + ": " + msg;
-                TCPServer.broadcast(formatted, this);
+                server.broadcast(formatted, this);
             }
 
         } catch (Exception ignored) {
-            // unexpected disconnects end up here
+            // unexpected disconnect
         } finally {
-            // ✅ SYSTEM leave message + remove client
-            TCPServer.removeClient(this);
+            // cleanup
+            server.removeClient(this);
+
             if (username != null) {
-                TCPServer.broadcast(systemMsg(username + " left the chat."), this);
-                TCPServer.log(username + " disconnected.");
+                server.broadcast(systemMsg(username + " left the chat."), this);
+                server.log(username + " disconnected.");
             }
+
             closeQuietly();
         }
     }

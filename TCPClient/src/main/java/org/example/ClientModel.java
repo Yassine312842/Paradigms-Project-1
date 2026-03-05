@@ -13,18 +13,24 @@ public class ClientModel {
     private PrintWriter out;
 
     private Consumer<String> onMessage = msg -> {};
+    private Runnable onDisconnect = () -> {};
 
     public void connect(String ip, int port, String username) throws Exception {
         socket = new Socket(ip, port);
+
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         out = new PrintWriter(socket.getOutputStream(), true);
 
-        // handshake: first line is username (empty => read-only mode on server)
+        // handshake: first line is username (empty => read-only)
         out.println(username == null ? "" : username);
     }
 
     public void setOnMessage(Consumer<String> onMessage) {
         this.onMessage = (onMessage == null) ? (msg -> {}) : onMessage;
+    }
+
+    public void setOnDisconnect(Runnable onDisconnect) {
+        this.onDisconnect = (onDisconnect == null) ? (() -> {}) : onDisconnect;
     }
 
     public void startListening() {
@@ -34,8 +40,10 @@ public class ClientModel {
                 while ((msg = in.readLine()) != null) {
                     onMessage.accept(msg);
                 }
-            } catch (Exception e) {
-                onMessage.accept("Disconnected from server.");
+            } catch (Exception ignored) {
+                // ignore
+            } finally {
+                onDisconnect.run();
             }
         }, "client-listener");
 
@@ -49,5 +57,9 @@ public class ClientModel {
 
     public void disconnect() {
         try { if (socket != null) socket.close(); } catch (Exception ignored) {}
+    }
+
+    public boolean isConnected() {
+        return socket != null && socket.isConnected() && !socket.isClosed();
     }
 }

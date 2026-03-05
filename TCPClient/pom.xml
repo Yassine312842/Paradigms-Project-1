@@ -15,12 +15,22 @@
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- JavaFX version -->
+        <javafx.version>25.0.2</javafx.version>
     </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>25.0.2</version>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>
 
-            <!-- Java compiler -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -31,7 +41,17 @@
                 </configuration>
             </plugin>
 
-            <!-- Runnable JAR -->
+            <!-- JavaFX run support -->
+            <plugin>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>0.0.8</version>
+                <configuration>
+                    <mainClass>org.example.ChatApp</mainClass>
+                </configuration>
+            </plugin>
+
+            <!-- Still produces a runnable jar (note: JavaFX needs module args when running outside Maven) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -39,7 +59,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>org.example.TCPClient</mainClass>
+                            <mainClass>org.example.ChatApp</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

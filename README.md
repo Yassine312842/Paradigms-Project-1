@@ -64,6 +64,10 @@ TCPClient/src/main/resources/images/
 
 If `aui_logo_white.png` is missing, the app tries other common names (including your current logo), and finally falls back to showing the title text.
 
+### UML Diagram
+<img width="1039" height="728" alt="image" src="https://github.com/user-attachments/assets/0351062e-a466-4ed5-977a-990d976fcf6f" />
+
+
 ### Note about “removing the white background”
 JavaFX/CSS cannot remove a white rectangle baked into an image.  
 To remove the logo’s white box, use a **transparent PNG**.

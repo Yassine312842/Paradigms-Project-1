@@ -1,4 +1,4 @@
-package org.example;
+package client;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -21,7 +21,6 @@ public class ClientModel {
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         out = new PrintWriter(socket.getOutputStream(), true);
 
-        // handshake: first line is username (empty => read-only)
         out.println(username == null ? "" : username);
     }
 

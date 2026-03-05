@@ -36,10 +36,9 @@ public class TCPClient {
                 username = "";
             }
 
-            // Send username to server (handshake)
+            // Send username to server
             out.println(username);
 
-            // Thread to receive messages
             new Thread(() -> {
                 try {
                     String msg;
@@ -51,7 +50,6 @@ public class TCPClient {
                 }
             }).start();
 
-            // Send messages
             String userInput;
 
             while ((userInput = console.readLine()) != null) {

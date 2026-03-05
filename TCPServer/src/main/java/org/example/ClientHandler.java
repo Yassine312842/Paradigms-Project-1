@@ -8,6 +8,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 public class ClientHandler extends Thread {
+
     private final Socket socket;
     private BufferedReader in;
     private PrintWriter out;
@@ -27,27 +28,29 @@ public class ClientHandler extends Thread {
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             out = new PrintWriter(socket.getOutputStream(), true);
 
-            // 1) Username handshake (first line)
-            String firstLine = in.readLine(); // may be null if client disconnects instantly
+            // 1) First line from client = username
+            String firstLine = in.readLine();
             if (firstLine == null) {
-                close();
-                return;
+                return; // client disconnected immediately
             }
 
             username = firstLine.trim();
+
+            // 2) Read-only mode if empty username
             if (username.isEmpty()) {
                 readOnly = true;
-                username = "READ_ONLY_" + socket.getPort(); // simple unique fallback
-                sendMessage("You are connected in READ-ONLY MODE (cannot send messages).");
+                username = "READ_ONLY_" + socket.getPort();
+                sendMessage(systemMsg("You are connected in READ-ONLY MODE (cannot send messages)."));
             } else {
                 readOnly = false;
-                sendMessage("Welcome " + username + "!");
+                sendMessage(systemMsg("Welcome " + username + "!"));
             }
 
+            // ✅ SYSTEM join message (broadcast to others)
             TCPServer.log(username + " connected.");
             TCPServer.broadcast(systemMsg(username + " joined the chat."), this);
 
-            // 2) Main message loop
+            // 3) Message loop
             String msg;
             while ((msg = in.readLine()) != null) {
                 msg = msg.trim();
@@ -55,39 +58,46 @@ public class ClientHandler extends Thread {
 
                 // Disconnect commands
                 if (msg.equalsIgnoreCase("bye") || msg.equalsIgnoreCase("end")) {
-                    sendMessage("Goodbye!");
+                    sendMessage(systemMsg("Goodbye!"));
                     break;
                 }
 
                 // allUsers command
                 if (msg.equalsIgnoreCase("allUsers")) {
-                    sendMessage("Active users: " + TCPServer.getActiveUsers());
+                    sendMessage(systemMsg("Active users: " + TCPServer.getActiveUsers()));
                     continue;
                 }
 
                 // Read-only enforcement
                 if (readOnly) {
-                    sendMessage("READ-ONLY MODE: you cannot send messages.");
+                    sendMessage(systemMsg("READ-ONLY MODE: you cannot send messages."));
                     continue;
                 }
 
-                // Normal message → formatted broadcast
-                String formatted = "[" + LocalTime.now().format(TIME_FMT) + "] " + username + ": " + msg;
+                // Normal message broadcast
+                String formatted = "[" + now() + "] " + username + ": " + msg;
                 TCPServer.broadcast(formatted, this);
             }
 
-        } catch (Exception e) {
-            // client likely disconnected unexpectedly
+        } catch (Exception ignored) {
+            // unexpected disconnects end up here
         } finally {
+            // ✅ SYSTEM leave message + remove client
             TCPServer.removeClient(this);
-            TCPServer.broadcast(systemMsg(username + " left the chat."), this);
-            TCPServer.log(username + " disconnected.");
-            close();
+            if (username != null) {
+                TCPServer.broadcast(systemMsg(username + " left the chat."), this);
+                TCPServer.log(username + " disconnected.");
+            }
+            closeQuietly();
         }
     }
 
+    private String now() {
+        return LocalTime.now().format(TIME_FMT);
+    }
+
     private String systemMsg(String text) {
-        return "[" + LocalTime.now().format(TIME_FMT) + "] " + "(SYSTEM): " + text;
+        return "[" + now() + "] (SYSTEM): " + text;
     }
 
     public void sendMessage(String message) {
@@ -98,7 +108,7 @@ public class ClientHandler extends Thread {
         return username;
     }
 
-    private void close() {
+    private void closeQuietly() {
         try { if (in != null) in.close(); } catch (Exception ignored) {}
         try { if (out != null) out.close(); } catch (Exception ignored) {}
         try { if (socket != null && !socket.isClosed()) socket.close(); } catch (Exception ignored) {}

@@ -68,6 +68,11 @@ If `aui_logo_white.png` is missing, the app tries other common names (including 
 <img width="1039" height="728" alt="image" src="https://github.com/user-attachments/assets/0351062e-a466-4ed5-977a-990d976fcf6f" />
 
 
+### Sequence Diagram
+<img width="1600" height="227" alt="image" src="https://github.com/user-attachments/assets/85026db4-52af-4070-bbd9-2a211d5d9b13" />
+
+
+
 ### Note about “removing the white background”
 JavaFX/CSS cannot remove a white rectangle baked into an image.  
 To remove the logo’s white box, use a **transparent PNG**.

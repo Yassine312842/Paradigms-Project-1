@@ -3,10 +3,10 @@
 AUI General Chat is a **TCP multi-client chat application** built in **Java**, with a modern **JavaFX** client UI and a TCP server that broadcasts messages to connected clients. The UI follows AUI branding (green + white) and supports **read-only mode** when the username is left empty.
 
 ### Group Members
-Youssef ASSEMLALI__
-Ihab Kassimi__
-Yassine Mallass__
-Omar Mehraby
+Youssef ASSEMLALI<br>
+Ihab Kassimi<br>
+Yassine Mallass<br>
+Omar Mehraby<br>
 
 ### Demo Video
 https://alakhawayn365-my.sharepoint.com/:f:/g/personal/y_mallass_aui_ma/IgDs8xBHasqCTIJGz0PJaJvjAcdVq5hBLPc1IhvUd_ywkZQ?e=SvZOaw

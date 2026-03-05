@@ -7,9 +7,11 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
@@ -20,6 +22,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class ChatApp extends Application {
+
+    // Your current resource filenames (from your folder screenshot)
+    private static final String LOGIN_BG_PATH = "/images/login_bg.jpg.jpg";
+    private static final String LOGIN_LOGO_PATH = "/images/aui_logo.png.png";
+
+    // We'll reuse the login background as a subtle chat background too
+    private static final String CHAT_BG_PATH = "/images/login_bg.jpg.jpg";
+
+    private static final String AUI_GREEN = "#0B5431";
 
     private final ClientModel model = new ClientModel();
 
@@ -56,6 +67,7 @@ public class ChatApp extends Application {
         stage.show();
     }
 
+    // ---------------- Floating card login over full background ----------------
     private Scene buildLoginScene(Stage stage) {
         TextField ipField = new TextField("localhost");
         TextField portField = new TextField("3000");
@@ -63,36 +75,124 @@ public class ChatApp extends Application {
         userField.setPromptText("Leave empty for READ-ONLY");
 
         Label error = new Label();
+        error.setVisible(false);
+        error.setStyle("-fx-text-fill: #ff3b30; -fx-font-size: 12px; -fx-font-weight: 800;");
+
         Button connectBtn = new Button("Connect");
-        connectBtn.getStyleClass().add("primary-btn");
+        connectBtn.setMaxWidth(Double.MAX_VALUE);
+        connectBtn.setStyle("""
+                -fx-background-color: %s;
+                -fx-text-fill: white;
+                -fx-font-size: 14px;
+                -fx-font-weight: 900;
+                -fx-padding: 12 16 12 16;
+                -fx-background-radius: 12;
+                -fx-cursor: hand;
+                """.formatted(AUI_GREEN));
 
-        GridPane grid = new GridPane();
-        grid.setPadding(new Insets(18));
-        grid.setHgap(10);
-        grid.setVgap(10);
+        StackPane root = new StackPane();
 
-        grid.add(new Label("Server IP:"), 0, 0);
-        grid.add(ipField, 1, 0);
+        Region fallback = new Region();
+        fallback.setStyle("-fx-background-color: #0b1f16;");
 
-        grid.add(new Label("Port:"), 0, 1);
-        grid.add(portField, 1, 1);
+        ImageView bg = new ImageView();
+        Image bgImg = tryLoadImage(LOGIN_BG_PATH);
+        if (bgImg != null) bg.setImage(bgImg);
 
-        grid.add(new Label("Username:"), 0, 2);
-        grid.add(userField, 1, 2);
+        bg.setPreserveRatio(false);
+        bg.fitWidthProperty().bind(stage.widthProperty());
+        bg.fitHeightProperty().bind(stage.heightProperty());
 
-        grid.add(connectBtn, 1, 3);
-        grid.add(error, 1, 4);
+        Region overlay = new Region();
+        overlay.setStyle("""
+                -fx-background-color: linear-gradient(to bottom right,
+                    rgba(11,84,49,0.72),
+                    rgba(0,0,0,0.55));
+                """);
+        overlay.prefWidthProperty().bind(stage.widthProperty());
+        overlay.prefHeightProperty().bind(stage.heightProperty());
 
-        connectBtn.setOnAction(e -> {
+        VBox card = new VBox(14);
+        card.setAlignment(Pos.CENTER);
+        card.setPadding(new Insets(26, 30, 22, 30));
+        card.setMaxWidth(540);
+        card.setStyle("""
+                -fx-background-color: rgba(255,255,255,0.72);
+                -fx-background-radius: 18;
+                -fx-border-radius: 18;
+                -fx-border-color: rgba(255,255,255,0.35);
+                -fx-border-width: 1;
+                """);
+        card.setEffect(new DropShadow(28, Color.rgb(0, 0, 0, 0.28)));
+
+        ImageView logo = new ImageView();
+        Image logoImg = tryLoadImage(LOGIN_LOGO_PATH);
+        if (logoImg != null) {
+            logo.setImage(logoImg);
+            logo.setFitHeight(150); // BIGGER LOGIN LOGO
+            logo.setPreserveRatio(true);
+        }
+
+        Label title = new Label("AUI General Chat");
+        title.setStyle("""
+                -fx-font-size: 26px;
+                -fx-font-weight: 900;
+                -fx-text-fill: %s;
+                """.formatted(AUI_GREEN));
+
+        Label subtitle = new Label("Sign in to join the conversation.");
+        subtitle.setStyle("""
+                -fx-font-size: 13px;
+                -fx-font-weight: 700;
+                -fx-text-fill: rgba(0,0,0,0.55);
+                """);
+
+        styleField(ipField);
+        styleField(portField);
+        styleField(userField);
+
+        VBox form = new VBox(10);
+        form.setAlignment(Pos.CENTER_LEFT);
+        form.setFillWidth(true);
+        form.getChildren().addAll(
+                labelSmall("Server IP"),
+                ipField,
+                labelSmall("Port"),
+                portField,
+                labelSmall("Username"),
+                userField
+        );
+
+        Label tip = new Label("Leave username empty to join as read-only.");
+        tip.setStyle("-fx-text-fill: rgba(0,0,0,0.55); -fx-font-size: 12px; -fx-font-weight: 700;");
+
+        VBox buttons = new VBox(10, connectBtn, tip);
+        buttons.setAlignment(Pos.CENTER);
+        buttons.setFillWidth(true);
+
+        card.getChildren().addAll(
+                logo,
+                title,
+                subtitle,
+                new Separator(),
+                form,
+                error,
+                buttons
+        );
+
+        StackPane.setAlignment(card, Pos.CENTER);
+        root.getChildren().addAll(fallback, bg, overlay, card);
+
+        Runnable doConnect = () -> {
             String ip = ipField.getText().trim();
             String portStr = portField.getText().trim();
-            String username = userField.getText() == null ? "" : userField.getText().trim();
+            String username = (userField.getText() == null) ? "" : userField.getText().trim();
 
             int port;
             try {
                 port = Integer.parseInt(portStr);
             } catch (Exception ex) {
-                error.setText("Invalid port.");
+                showError(error, "Invalid port.");
                 return;
             }
 
@@ -118,55 +218,80 @@ public class ChatApp extends Application {
                 stage.setScene(chatScene);
 
             } catch (Exception ex) {
-                error.setText("Failed to connect. Is the server running?");
+                showError(error, "Failed to connect. Is the server running?");
             }
-        });
+        };
 
-        Scene scene = new Scene(grid, 460, 250);
+        connectBtn.setOnAction(e -> doConnect.run());
+        userField.setOnAction(e -> doConnect.run());
+        portField.setOnAction(e -> doConnect.run());
+
+        Scene scene = new Scene(root, 1100, 650);
         scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
         return scene;
     }
 
+    // ---------------- Enhanced chat scene ----------------
     private Scene buildChatScene(Stage stage) {
-        // Top bar: logo + title + status
-        HBox topbar = new HBox();
+        HBox topbar = new HBox(12);
         topbar.getStyleClass().add("topbar");
 
-        ImageView logoView = new ImageView();
-        try {
-            Image logo = new Image(getClass().getResourceAsStream("/aui_logo.png"));
-            logoView.setImage(logo);
-            logoView.setFitHeight(28);
-            logoView.setFitWidth(28);
-            logoView.setPreserveRatio(true);
-        } catch (Exception ignored) {
-            // If logo missing, app still runs
-        }
+        Image topLogoImg = tryLoadImage(
+                "/images/aui_logo_white.png",
+                "/images/aui_logo_white.png.png",
+                "/images/aui_logo.png",
+                "/images/aui_logo.png.png",
+                "/aui_logo.png"
+        );
 
-        Label title = new Label("AUI General Chat");
-        title.getStyleClass().add("topbar-title");
+        ImageView logoView = new ImageView();
+        if (topLogoImg != null) {
+            logoView.setImage(topLogoImg);
+            logoView.setFitHeight(56); // BIGGER TOPBAR LOGO
+            logoView.setPreserveRatio(true);
+        }
 
         statusLabel.getStyleClass().add("status-label");
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        topbar.getChildren().addAll(logoView, title, spacer, statusLabel);
+        if (topLogoImg != null) {
+            topbar.getChildren().addAll(logoView, spacer, statusLabel);
+        } else {
+            Label fallbackTitle = new Label("AUI General Chat");
+            fallbackTitle.getStyleClass().add("topbar-title");
+            topbar.getChildren().addAll(fallbackTitle, spacer, statusLabel);
+        }
 
-        // Chat list (WhatsApp style bubbles)
         chatList.getStyleClass().add("chat-list");
         chatList.setFocusTraversable(false);
         chatList.setCellFactory(lv -> new MessageCell());
 
-        // Right panel users
-        VBox right = new VBox(10, new Label("Users"), usersList, refreshUsersBtn);
-        right.setPadding(new Insets(16));
-        right.setPrefWidth(220);
+        StackPane chatCenter = new StackPane();
+        chatCenter.getStyleClass().add("chat-center");
+
+        ImageView chatBg = new ImageView();
+        Image chatBgImg = tryLoadImage(CHAT_BG_PATH);
+        if (chatBgImg != null) chatBg.setImage(chatBgImg);
+
+        chatBg.setOpacity(0.08);
+        chatBg.setPreserveRatio(false);
+        chatBg.fitWidthProperty().bind(chatCenter.widthProperty());
+        chatBg.fitHeightProperty().bind(chatCenter.heightProperty());
+
+        chatCenter.getChildren().addAll(chatBg, chatList);
+
+        Label usersTitle = new Label("Users");
+        usersTitle.getStyleClass().add("users-title");
+
+        VBox right = new VBox(10, usersTitle, usersList, refreshUsersBtn);
+        right.getStyleClass().add("users-panel");
         VBox.setVgrow(usersList, Priority.ALWAYS);
 
+        refreshUsersBtn.getStyleClass().add("secondary-btn");
         refreshUsersBtn.setOnAction(e -> model.sendMessage("allUsers"));
 
-        // Input bar
         messageField.setPromptText("Type a message...");
         sendBtn.getStyleClass().add("primary-btn");
 
@@ -175,12 +300,8 @@ public class ChatApp extends Application {
             String text = messageField.getText();
             if (text == null || text.isBlank()) return;
 
-            // 1) show locally (server doesn't echo back to sender)
             addOwn(text);
-
-            // 2) send to server
             model.sendMessage(text);
-
             messageField.clear();
         };
 
@@ -188,6 +309,7 @@ public class ChatApp extends Application {
         messageField.setOnAction(e -> sendAction.run());
 
         Button disconnectBtn = new Button("Disconnect");
+        disconnectBtn.getStyleClass().add("danger-btn");
         disconnectBtn.setOnAction(e -> {
             if (model.isConnected()) model.sendMessage("bye");
             model.disconnect();
@@ -199,14 +321,15 @@ public class ChatApp extends Application {
         HBox.setHgrow(messageField, Priority.ALWAYS);
 
         BorderPane root = new BorderPane();
+        root.getStyleClass().add("chat-root");
         root.setTop(topbar);
-        root.setCenter(chatList);
+        root.setCenter(chatCenter);
         root.setRight(right);
         root.setBottom(inputBar);
 
         setChatControlsEnabled(false);
 
-        Scene scene = new Scene(root, 980, 600);
+        Scene scene = new Scene(root, 1100, 700);
         scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
         return scene;
     }
@@ -224,9 +347,7 @@ public class ChatApp extends Application {
         }
     }
 
-    // ---------- Incoming parsing ----------
     private void handleIncomingLine(String line) {
-        // Update users list if this is the server's response for allUsers
         if (line.contains("(SYSTEM): Active users:")) {
             String usersPart = line.substring(line.indexOf("Active users:") + "Active users:".length()).trim();
             List<String> users = Arrays.stream(usersPart.split(","))
@@ -239,18 +360,14 @@ public class ChatApp extends Application {
             return;
         }
 
-        // System messages centered
         if (line.contains("(SYSTEM):")) {
             addSystem(line);
             return;
         }
 
-        // Normal message pattern: "[HH:mm] user: msg"
-        // We treat everything received from server as "OTHER" because server doesn't echo to sender.
         addOther(line);
     }
 
-    // ---------- Message creation ----------
     private void addOwn(String text) {
         chatList.getItems().add(Message.own(now(), myUsername, text));
         chatList.scrollTo(chatList.getItems().size() - 1);
@@ -275,7 +392,47 @@ public class ChatApp extends Application {
         model.disconnect();
     }
 
-    // ---------- Message model ----------
+    private static void showError(Label error, String msg) {
+        error.setText(msg);
+        error.setVisible(true);
+    }
+
+    private static Label labelSmall(String t) {
+        Label l = new Label(t);
+        l.setStyle("-fx-font-size: 12px; -fx-text-fill: rgba(0,0,0,0.78); -fx-font-weight: 900;");
+        return l;
+    }
+
+    private static void styleField(TextField tf) {
+        tf.setStyle("""
+                -fx-background-radius: 12;
+                -fx-border-radius: 12;
+                -fx-border-color: rgba(11,84,49,0.22);
+                -fx-border-width: 1.2;
+                -fx-padding: 10 12 10 12;
+                -fx-font-size: 13px;
+                -fx-background-color: rgba(255,255,255,0.98);
+                """);
+    }
+
+    private Image tryLoadImage(String path) {
+        try {
+            var url = getClass().getResource(path);
+            if (url == null) return null;
+            return new Image(url.toExternalForm());
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private Image tryLoadImage(String... paths) {
+        for (String p : paths) {
+            Image img = tryLoadImage(p);
+            if (img != null) return img;
+        }
+        return null;
+    }
+
     private static class Message {
         enum Kind { OWN, OTHER, SYSTEM }
 
@@ -296,7 +453,6 @@ public class ChatApp extends Application {
         }
 
         static Message other(String rawLine) {
-            // keep the server line as text for display
             return new Message(Kind.OTHER, "", "", rawLine);
         }
 
@@ -305,7 +461,6 @@ public class ChatApp extends Application {
         }
     }
 
-    // ---------- WhatsApp-like bubble cell ----------
     private static class MessageCell extends ListCell<Message> {
         @Override
         protected void updateItem(Message msg, boolean empty) {
@@ -325,21 +480,19 @@ public class ChatApp extends Application {
 
                 HBox box = new HBox(sys);
                 box.setAlignment(Pos.CENTER);
-                box.setPadding(new Insets(6, 10, 6, 10));
+                box.setPadding(new Insets(8, 12, 8, 12));
 
                 setGraphic(box);
                 return;
             }
 
-            // Bubble content
-            VBox bubble = new VBox(3);
+            VBox bubble = new VBox(4);
             bubble.getStyleClass().add("bubble");
 
-            Label text = new Label(msg.kind == Message.Kind.OTHER ? msg.text : msg.text);
+            Label text = new Label(msg.text);
+            text.getStyleClass().add("bubble-text");
             text.setWrapText(true);
 
-            // For own messages, show time only; for other messages, raw line already includes time/sender.
-            // If later you want perfect parsing, we can split "[HH:mm] user: msg" properly.
             Label meta = new Label(msg.kind == Message.Kind.OWN ? msg.time : "");
             meta.getStyleClass().add("meta");
 
@@ -352,13 +505,9 @@ public class ChatApp extends Application {
             }
 
             HBox row = new HBox(bubble);
-            row.setPadding(new Insets(4, 10, 4, 10));
-
-            if (msg.kind == Message.Kind.OWN) {
-                row.setAlignment(Pos.CENTER_RIGHT);
-            } else {
-                row.setAlignment(Pos.CENTER_LEFT);
-            }
+            row.getStyleClass().add("bubble-row");
+            row.setPadding(new Insets(6, 14, 6, 14));
+            row.setAlignment(msg.kind == Message.Kind.OWN ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
 
             setGraphic(row);
         }
